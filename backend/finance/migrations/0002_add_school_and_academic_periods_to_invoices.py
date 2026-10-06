@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('accounts', '0002_add_school_and_role_to_custom_user'),
-        ('finance', '0001_initial_accounts_schema'),
+        ('finance', '0001_initial_finance_schema'),
     ]
 
     operations = [

@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('accounts', '0006_add_academic_periods_and_audit_guardian'),
-        ('attendance', '0001_initial_accounts_schema'),
+        ('attendance', '0001_initial_attendance_schema'),
     ]
 
     operations = [
