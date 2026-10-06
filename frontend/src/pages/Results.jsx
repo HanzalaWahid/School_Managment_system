@@ -14,6 +14,9 @@ const GRADE_MAP = (marks) => {
 };
 
 const Results = () => {
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const canManage = ['admin', 'school_admin', 'teacher'].includes(currentUser.role);
+  const canPublish = ['admin', 'school_admin', 'principal'].includes(currentUser.role);
   const [results, setResults] = useState([]);
   const [students, setStudents] = useState([]);
   const [courses, setCourses] = useState([]);
@@ -60,12 +63,6 @@ const Results = () => {
     setEditId(r.id); setShowForm(true);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this result?')) return;
-    try { await api.delete(`/results/${id}/`); loadData(); }
-    catch { setError('Failed to delete.'); }
-  };
-
   const gradeColor = (g) => {
     if (['A+', 'A'].includes(g)) return 'bg-green-100 text-green-700';
     if (g === 'B') return 'bg-blue-100 text-blue-700';
@@ -78,10 +75,10 @@ const Results = () => {
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-gray-800">Results & Marks</h2>
-        <button onClick={() => { setShowForm(!showForm); setEditId(null); setForm(emptyForm); }}
+        {canManage && <button onClick={() => { setShowForm(!showForm); setEditId(null); setForm(emptyForm); }}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors">
           {showForm ? 'Cancel' : 'Add Result'}
-        </button>
+        </button>}
       </div>
 
       {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm">{error}</div>}
@@ -131,22 +128,23 @@ const Results = () => {
                 <th className="p-3 font-semibold">Course</th>
                 <th className="p-3 font-semibold">Marks</th>
                 <th className="p-3 font-semibold">Grade</th>
-                <th className="p-3 font-semibold">Actions</th>
+                {(canManage || canPublish) && <th className="p-3 font-semibold">Actions</th>}
               </tr>
             </thead>
             <tbody className="text-sm">
               {results.length === 0 ? (
-                <tr><td colSpan={5} className="p-6 text-center text-gray-400">No results found. Add one above.</td></tr>
+                <tr><td colSpan={canManage || canPublish ? 5 : 4} className="p-6 text-center text-gray-400">No results found.</td></tr>
               ) : results.map(r => (
                 <tr key={r.id} className="border-b border-gray-100 hover:bg-slate-50">
                   <td className="p-3 font-medium text-gray-800">{r.student_name}</td>
                   <td className="p-3 text-gray-600">{r.course_name}</td>
                   <td className="p-3 font-semibold text-gray-800">{r.marks}<span className="text-gray-400 text-xs">/100</span></td>
                   <td className="p-3"><span className={`px-2 py-1 rounded text-xs font-bold ${gradeColor(r.grade)}`}>{r.grade}</span></td>
-                  <td className="p-3 space-x-3">
-                    <button onClick={() => handleEdit(r)} className="text-blue-600 hover:underline font-medium">Edit</button>
-                    <button onClick={() => handleDelete(r.id)} className="text-red-600 hover:underline font-medium">Delete</button>
-                  </td>
+                  {(canManage || canPublish) && <td className="p-3 space-x-3">
+                    {canManage && !r.is_published && <button onClick={() => handleEdit(r)} className="text-blue-600 hover:underline font-medium">Edit</button>}
+                    {canPublish && !r.is_published && <button onClick={async () => { await api.post(`/results/${r.id}/publish/`, {}); loadData(); }} className="text-emerald-700 hover:underline font-medium">Publish</button>}
+                    {r.is_published && <span className="text-gray-500">Published</span>}
+                  </td>}
                 </tr>
               ))}
             </tbody>

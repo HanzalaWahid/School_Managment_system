@@ -4,6 +4,8 @@ import { api } from '../utils/api';
 const emptyForm = { name: '', code: '', teacher: '' };
 
 const Courses = () => {
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const canManage = currentUser.role === 'admin' || currentUser.role === 'school_admin';
   const [courses, setCourses] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -55,10 +57,10 @@ const Courses = () => {
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-gray-800">Courses</h2>
-        <button onClick={() => { setShowForm(!showForm); setEditId(null); setForm(emptyForm); }}
+        {canManage && <button onClick={() => { setShowForm(!showForm); setEditId(null); setForm(emptyForm); }}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors">
           {showForm ? 'Cancel' : 'Add Course'}
-        </button>
+        </button>}
       </div>
 
       {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm">{error}</div>}
@@ -95,21 +97,21 @@ const Courses = () => {
                 <th className="p-3 font-semibold">Code</th>
                 <th className="p-3 font-semibold">Course Name</th>
                 <th className="p-3 font-semibold">Teacher</th>
-                <th className="p-3 font-semibold">Actions</th>
+                {canManage && <th className="p-3 font-semibold">Actions</th>}
               </tr>
             </thead>
             <tbody className="text-sm">
               {courses.length === 0 ? (
-                <tr><td colSpan={4} className="p-6 text-center text-gray-400">No courses found. Add one above.</td></tr>
+                <tr><td colSpan={canManage ? 4 : 3} className="p-6 text-center text-gray-400">No courses found.</td></tr>
               ) : courses.map(c => (
                 <tr key={c.id} className="border-b border-gray-100 hover:bg-slate-50">
                   <td className="p-3 font-mono font-semibold text-blue-700">{c.code}</td>
                   <td className="p-3 font-medium text-gray-800">{c.name}</td>
                   <td className="p-3 text-gray-600">{c.teacher_name || <span className="text-gray-400 italic">Unassigned</span>}</td>
-                  <td className="p-3 space-x-3">
+                  {canManage && <td className="p-3 space-x-3">
                     <button onClick={() => handleEdit(c)} className="text-blue-600 hover:underline font-medium">Edit</button>
                     <button onClick={() => handleDelete(c.id)} className="text-red-600 hover:underline font-medium">Delete</button>
-                  </td>
+                  </td>}
                 </tr>
               ))}
             </tbody>

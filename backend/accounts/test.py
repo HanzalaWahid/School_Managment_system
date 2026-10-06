@@ -1,0 +1,1 @@
+# two strings are isomorphic if the characters in s can be replaced to get t.

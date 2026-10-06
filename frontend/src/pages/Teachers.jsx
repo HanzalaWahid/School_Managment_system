@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../utils/api';
 
-const emptyForm = { username: '', first_name: '', last_name: '', email: '', password: 'pass1234', department: '', designation: '' };
+const emptyForm = { username: '', first_name: '', last_name: '', email: '', password: '', department: '', designation: '' };
 
 const Teachers = () => {
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const canManage = currentUser.role === 'admin' || currentUser.role === 'school_admin';
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -51,7 +53,7 @@ const Teachers = () => {
         const errObj = JSON.parse(e.message || '{}');
         message = errObj.detail || Object.values(errObj).flat().join(', ') || message;
       } catch {
-        message = message;
+        message = 'Error saving teacher. Ensure the provided user data is correct.';
       }
       setError('Error: ' + message);
     } finally { setSaving(false); }
@@ -71,20 +73,14 @@ const Teachers = () => {
     setShowForm(true);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this teacher?')) return;
-    try { await api.delete(`/teachers/${id}/`); loadTeachers(); }
-    catch { setError('Failed to delete.'); }
-  };
-
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-gray-800">Teachers</h2>
-        <button onClick={() => { setShowForm(!showForm); setEditId(null); setForm(emptyForm); }}
+        {canManage && <button onClick={() => { setShowForm(!showForm); setEditId(null); setForm(emptyForm); }}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors">
           {showForm ? 'Cancel' : 'Add Teacher'}
-        </button>
+        </button>}
       </div>
 
       {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm">{error}</div>}
@@ -122,22 +118,21 @@ const Teachers = () => {
                 <th className="p-3 font-semibold">Username</th>
                 <th className="p-3 font-semibold">Department</th>
                 <th className="p-3 font-semibold">Designation</th>
-                <th className="p-3 font-semibold">Actions</th>
+                {canManage && <th className="p-3 font-semibold">Actions</th>}
               </tr>
             </thead>
             <tbody className="text-sm">
               {teachers.length === 0 ? (
-                <tr><td colSpan={5} className="p-6 text-center text-gray-400">No teachers found. Add one above.</td></tr>
+                <tr><td colSpan={canManage ? 5 : 4} className="p-6 text-center text-gray-400">No teachers found.</td></tr>
               ) : teachers.map(t => (
                 <tr key={t.id} className="border-b border-gray-100 hover:bg-slate-50">
                   <td className="p-3 font-medium text-gray-800">{t.user_detail?.first_name} {t.user_detail?.last_name}</td>
                   <td className="p-3 text-gray-500">{t.user_detail?.username}</td>
                   <td className="p-3 text-gray-600">{t.department}</td>
                   <td className="p-3 text-gray-600">{t.designation}</td>
-                  <td className="p-3 space-x-3">
+                  {canManage && <td className="p-3 space-x-3">
                     <button onClick={() => handleEdit(t)} className="text-blue-600 hover:underline font-medium">Edit</button>
-                    <button onClick={() => handleDelete(t.id)} className="text-red-600 hover:underline font-medium">Delete</button>
-                  </td>
+                  </td>}
                 </tr>
               ))}
             </tbody>

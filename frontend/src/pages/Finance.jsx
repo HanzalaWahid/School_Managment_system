@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useEffectEvent, useState } from 'react';
 import { api } from '../utils/api';
 
-const emptyForm = { student: '', amount: '', status: 'pending', due_date: '' };
+const emptyForm = { student: '', amount: '', due_date: '' };
 
 const Finance = () => {
   const [invoices, setInvoices] = useState([]);
+  const [summary, setSummary] = useState(null);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -14,8 +15,9 @@ const Finance = () => {
   const [saving, setSaving] = useState(false);
 
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-  const canManage = currentUser.role === 'admin';
-  const canView = currentUser.role === 'admin' || currentUser.role === 'student';
+  const isPrincipal = currentUser.role === 'principal';
+  const canManage = currentUser.role === 'accountant';
+  const canView = ['admin', 'school_admin', 'accountant', 'principal', 'student', 'parent'].includes(currentUser.role);
 
   const loadData = async () => {
     if (!canView) {
@@ -25,6 +27,11 @@ const Finance = () => {
     }
 
     try {
+      if (isPrincipal) {
+        setSummary(await api.get('/invoices/summary/'));
+        setLoading(false);
+        return;
+      }
       const inv = await api.get('/invoices/');
       setInvoices(inv?.results || inv || []);
       if (canManage) {
@@ -42,7 +49,9 @@ const Finance = () => {
     }
   };
 
-  useEffect(() => { loadData(); }, []);
+  const loadInitialData = useEffectEvent(() => { void loadData(); });
+
+  useEffect(() => { loadInitialData(); }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -64,12 +73,6 @@ const Finance = () => {
     setEditId(inv.id); setShowForm(true);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this invoice?')) return;
-    try { await api.delete(`/invoices/${id}/`); loadData(); }
-    catch { setError('Failed to delete.'); }
-  };
-
   const statusBadge = (status) => {
     const styles = {
       paid: 'bg-green-100 text-green-700',
@@ -79,8 +82,12 @@ const Finance = () => {
     return <span className={`px-2 py-1 rounded text-xs font-semibold ${styles[status] || ''}`}>{status}</span>;
   };
 
-  const totalUnpaid = invoices.filter(i => i.status === 'unpaid').reduce((s, i) => s + parseFloat(i.amount || 0), 0);
-  const totalPaid = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + parseFloat(i.amount || 0), 0);
+  const totalUnpaid = isPrincipal
+    ? Number(summary?.unpaid_amount || 0)
+    : invoices.filter(i => ['unpaid', 'pending', 'partially_paid'].includes(i.status)).reduce((s, i) => s + parseFloat(i.amount || 0), 0);
+  const totalPaid = isPrincipal
+    ? Number(summary?.total_collected || 0)
+    : invoices.filter(i => i.status === 'paid').reduce((s, i) => s + parseFloat(i.amount || 0), 0);
 
   return (
     <div className="space-y-6">
@@ -88,7 +95,7 @@ const Finance = () => {
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
           <p className="text-sm text-gray-500">Total Invoices</p>
-          <p className="text-2xl font-bold text-gray-900">{invoices.length}</p>
+          <p className="text-2xl font-bold text-gray-900">{isPrincipal ? summary?.total_invoices ?? 0 : invoices.length}</p>
         </div>
         <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
           <p className="text-sm text-gray-500">Total Collected</p>
@@ -126,12 +133,6 @@ const Finance = () => {
             <input placeholder="Amount *" type="number" step="0.01" required value={form.amount}
               onChange={e => setForm({...form, amount: e.target.value})}
               className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500" />
-            <select value={form.status} onChange={e => setForm({...form, status: e.target.value})}
-              className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-              <option value="pending">Pending</option>
-              <option value="unpaid">Unpaid</option>
-              <option value="paid">Paid</option>
-            </select>
             <input type="date" required value={form.due_date} onChange={e => setForm({...form, due_date: e.target.value})}
               className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500" />
             <div className="col-span-full">
@@ -144,7 +145,7 @@ const Finance = () => {
 
         {loading ? (
           <div className="py-12 text-center text-gray-400">Loading invoices...</div>
-        ) : (
+        ) : !isPrincipal && (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -168,8 +169,7 @@ const Finance = () => {
                     <td className="p-3">{statusBadge(inv.status)}</td>
                     <td className="p-3 text-gray-600">{inv.due_date}</td>
                     <td className="p-3 space-x-3">
-                      <button onClick={() => handleEdit(inv)} className="text-blue-600 hover:underline font-medium">Edit</button>
-                      <button onClick={() => handleDelete(inv.id)} className="text-red-600 hover:underline font-medium">Delete</button>
+                      {canManage && <button onClick={() => handleEdit(inv)} className="text-blue-600 hover:underline font-medium">Edit</button>}
                     </td>
                   </tr>
                 ))}

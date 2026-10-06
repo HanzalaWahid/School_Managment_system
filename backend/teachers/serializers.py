@@ -8,3 +8,4 @@ class TeacherSerializer(serializers.ModelSerializer):
     class Meta:
         model = Teacher
         fields = ('id', 'user', 'user_detail', 'department', 'designation')
+        read_only_fields = ('id', 'user')

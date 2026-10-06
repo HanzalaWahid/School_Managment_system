@@ -15,7 +15,8 @@ const Attendance = () => {
   const [saving, setSaving] = useState(false);
 
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-  const canManage = currentUser.role === 'admin' || currentUser.role === 'teacher';
+  const canManage = currentUser.role === 'admin' || currentUser.role === 'school_admin' || currentUser.role === 'teacher';
+  const canView = ['admin', 'school_admin', 'teacher', 'principal', 'student', 'parent'].includes(currentUser.role);
 
   const loadData = async () => {
     try {
@@ -82,16 +83,6 @@ const Attendance = () => {
     setShowForm(true);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this attendance record?')) return;
-    try {
-      await api.delete(`/attendance/${id}/`);
-      loadData();
-    } catch {
-      setError('Failed to delete attendance record.');
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -110,7 +101,8 @@ const Attendance = () => {
           )}
         </div>
 
-        {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm">{error}</div>}
+        {!canView && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm">Attendance is not available for this role.</div>}
+        {error && canView && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm">{error}</div>}
 
         {showForm && canManage && (
           <form onSubmit={handleSubmit} className="mb-8 p-5 border border-gray-200 rounded-lg bg-gray-50 grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -172,7 +164,6 @@ const Attendance = () => {
                     {canManage && (
                       <td className="p-3 space-x-3">
                         <button onClick={() => handleEdit(record)} className="text-blue-600 hover:underline font-medium">Edit</button>
-                        <button onClick={() => handleDelete(record.id)} className="text-red-600 hover:underline font-medium">Delete</button>
                       </td>
                     )}
                   </tr>

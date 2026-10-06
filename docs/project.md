@@ -1,4 +1,6 @@
-School Account Management System – Production Architecture (Payment-Ready, Secure, Scalable)
+# School Account Management System - Target Production Architecture
+
+This document describes the intended deployment architecture; it is not a claim that the current implementation is production-ready. Release readiness depends on the current code passing security, workflow, and deployment verification.
 1. System Overview
 
 A web-based platform for managing school accounts, students, teachers, and fees, designed for live users.
@@ -135,7 +137,7 @@ Multi-school support (SaaS model)
 Online registration and fee payment portal
 6. Summary
 
-A production-ready architecture for a Django-based School Account Management System, designed to:
+A production-oriented target architecture for a Django-based School Account Management System, intended to:
 
 Be modular, scalable, and secure
 Support role-based access (Admin/Staff/Student)

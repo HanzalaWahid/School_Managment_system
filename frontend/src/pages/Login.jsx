@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { api } from '../utils/api';
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const successMessage = location.state?.message;
-  const [form, setForm] = useState({ username: 'admin', password: 'admin123' });
+  const [form, setForm] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -14,22 +15,13 @@ const Login = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('http://localhost:8000/api/auth/login/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        localStorage.setItem('access_token', data.access);
-        localStorage.setItem('refresh_token', data.refresh);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        navigate('/dashboard');
-      } else {
-        setError(data.error || 'Invalid credentials');
-      }
-    } catch (err) {
-      setError('Cannot connect to server. Is the backend running on port 8000?');
+      const data = await api.post('/auth/login/', form);
+      localStorage.setItem('access_token', data.access);
+      localStorage.setItem('refresh_token', data.refresh);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      navigate('/dashboard');
+    } catch (error) {
+      setError(error.message || 'Unable to sign in.');
     } finally {
       setLoading(false);
     }
@@ -86,18 +78,6 @@ const Login = () => {
           </button>
         </form>
 
-        <p className="text-center text-xs text-slate-400 mt-6">
-          Default: admin / admin123
-        </p>
-
-        <div className="mt-8 pt-6 border-t border-slate-100 text-center">
-          <p className="text-slate-600 text-sm">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-blue-600 font-bold hover:underline">
-              Create one now
-            </Link>
-          </p>
-        </div>
       </div>
     </div>
   );
