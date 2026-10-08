@@ -5,8 +5,8 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0003_backfill_legacy_school_data'),
-        ('courses', '0002_add_school_to_course'),
+        ('accounts', '0003_backfill_legacy_school'),
+        ('courses', '0002_course_school'),
     ]
 
     operations = [

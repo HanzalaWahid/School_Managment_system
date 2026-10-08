@@ -1,10 +1,10 @@
-from django.db import migrations, models
+﻿from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0003_backfill_legacy_school_data'),
+        ('accounts', '0003_backfill_legacy_school'),
     ]
 
     operations = [

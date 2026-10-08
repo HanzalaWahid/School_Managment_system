@@ -6,7 +6,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('accounts', '0007_backfill_academic_periods'),
-        ('finance', '0005_add_term_and_academic_year_to_fees'),
+        ('finance', '0005_feestructure_term_invoice_academic_year_invoice_term'),
     ]
 
     operations = [

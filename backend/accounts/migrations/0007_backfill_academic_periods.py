@@ -78,13 +78,15 @@ def backfill_periods(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0006_add_academic_periods_and_audit_guardian'),
-        ('courses', '0005_add_academic_year_and_term_to_courses'),
-        ('attendance', '0002_add_academic_year_and_term'),
-        ('results', '0003_add_academic_year_and_term_to_results'),
-        ('finance', '0005_add_term_and_academic_year_to_fees'),
+        ('accounts', '0006_alter_customuser_role_academicyear_auditlog_guardian_and_more'),
+        ('courses', '0005_course_academic_year_courseenrollment_academic_year_and_more'),
+        ('attendance', '0002_attendance_academic_year_attendance_term'),
+        ('results', '0003_result_academic_year_result_term'),
+        ('finance', '0005_feestructure_term_invoice_academic_year_invoice_term'),
     ]
 
     operations = [
         migrations.RunPython(backfill_periods, migrations.RunPython.noop),
     ]
+
+
