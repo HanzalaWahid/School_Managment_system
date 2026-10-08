@@ -7,8 +7,10 @@ import os
 from secrets import token_urlsafe
 
 from django.core.exceptions import ImproperlyConfigured
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
 def env_bool(name, default=False):
     value = os.environ.get(name)
